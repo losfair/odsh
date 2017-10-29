@@ -25,6 +25,8 @@ def parse(doc):
 class Transformer:
     def __init__(self, blk):
         self.blk = blk
+        self.in_pipeline = False
+        self.pipeline_exec_info = []
             
     def transform_list(self, node):
         for child in node.parts:
@@ -34,13 +36,34 @@ class Transformer:
         for child in node.list:
             self.transform_node(child)
 
+    def transform_pipeline(self, node):
+        self.in_pipeline = True
+        self.pipeline_exec_info = []
+        try:
+            for child in node.parts:
+                self.transform_node(child)
+            for i in range(1, len(self.pipeline_exec_info)):
+                self.pipeline_exec_info[i].stdin = odsh_ast.StdioConfig.pipe(str(i))
+                self.pipeline_exec_info[i - 1].stdout = odsh_ast.StdioConfig.pipe(str(i))
+
+            self.blk.append_op(
+                odsh_ast.ParallelExecOperation(self.pipeline_exec_info)
+            )
+        finally:
+            self.in_pipeline = False
+            self.pipeline_exec_info = []
+
     def transform_node(self, node):
         if node.kind == "command":
-            self.blk.append_op(
-                odsh_ast.ExecOperation(
-                    self.transform_command(node)
+            exec_info = self.transform_command(node)
+            if self.in_pipeline:
+                self.pipeline_exec_info.append(exec_info)
+            else:
+                self.blk.append_op(
+                    odsh_ast.ExecOperation(
+                        exec_info
+                    )
                 )
-            )
         elif node.kind == "operator":
             if_blk = odsh_ast.Block() # 'if'
             else_blk = odsh_ast.Block() # 'else'
@@ -66,6 +89,10 @@ class Transformer:
             self.transform_list(node)
         elif node.kind == "compound":
             self.transform_compound(node)
+        elif node.kind == "pipeline":
+            self.transform_pipeline(node)
+        elif node.kind == "pipe":
+            pass
         elif node.kind == "reservedword":
             pass
         else:

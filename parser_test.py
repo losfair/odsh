@@ -5,6 +5,7 @@ import json
 blk = odsh_parser.parse('''
 ls / && echo "OK"
 ls /niwf3w4y3nxif4 || echo "Failed"
+ls / | grep etc
 ''')
 
 print(json.dumps(blk.build()))

@@ -4,7 +4,7 @@ import json
 parts = bashlex.parse('''
 ls /
 echo "Hello world!" && true
-(ls / | grep etc) | true
+ls / | grep etc
 ENV="aaa=b" exit
 (a && b) && c
 '''.strip())
