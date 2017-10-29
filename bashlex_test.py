@@ -4,7 +4,7 @@ import json
 parts = bashlex.parse('''
 ls /
 echo "Hello world!" && true
-ls / | grep etc
+ls / | grep etc | true
 ENV="aaa=b" exit
 '''.strip())
 for ast in parts:

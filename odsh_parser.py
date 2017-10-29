@@ -28,8 +28,40 @@ def transform_root(node, blk):
                 transform_command(node)
             )
         )
+    elif node.kind == "list":
+        transform_list(node, blk)
     else:
         raise Exception("Unsupported node in root: " + node.kind)
+
+def transform_list(node, blk):
+    for child in node.parts:
+        if child.kind == "command":
+            blk.append_op(
+                odsh_ast.ExecOperation(
+                    transform_command(child)
+                )
+            )
+        elif child.kind == "operator":
+            if_blk = odsh_ast.Block() # 'if'
+            else_blk = odsh_ast.Block() # 'else'
+            target_blk = None
+
+            ifelse_op = None
+
+            if child.op == "&&":
+                target_blk = else_blk
+            elif child.op == "||":
+                target_blk = if_blk
+            else:
+                raise Exception("Unsupported operation: " + child.op)
+
+            blk.append_op(
+                odsh_ast.IfElseOperation(
+                    if_blk,
+                    else_blk
+                )
+            )
+            blk = target_blk
 
 def transform_command(node):
     args = []

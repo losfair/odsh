@@ -43,7 +43,12 @@ class IfElseOperation:
         self.else_blk = else_blk
 
     def build(self):
-        return [self.if_blk.build(), self.else_blk.build()]
+        return {
+            "IfElse": [
+                self.if_blk.build(),
+                self.else_blk.build()
+            ]
+        }
 
 class ExecInfo:
     def __init__(self, command = [], env = [], stdin = None, stdout = None):

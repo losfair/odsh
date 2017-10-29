@@ -3,8 +3,8 @@ import odsh_lib
 import json
 
 blk = odsh_parser.parse('''
-ls /
-
+ls / && echo "OK"
+ls /niwf3w4y3nxif4 || echo "Failed"
 ''')
 
 print(json.dumps(blk.build()))
